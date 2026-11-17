@@ -1,0 +1,53 @@
+export type Phrase = { key: string; en: string; ru: string; uz: string };
+
+export const phrases: Phrase[] = [
+  { key: "hello", en: "Hello", ru: "Здравствуйте", uz: "Assalomu alaykum" },
+  { key: "please", en: "Please", ru: "Пожалуйста", uz: "Iltimos" },
+  { key: "thankYou", en: "Thank you", ru: "Спасибо", uz: "Rahmat" },
+  { key: "yes", en: "Yes", ru: "Да", uz: "Ha" },
+  { key: "no", en: "No", ru: "Нет", uz: "Yo‘q" },
+  { key: "excuseMe", en: "Excuse me", ru: "Извините", uz: "Kechirasiz" },
+  { key: "sorry", en: "I’m sorry", ru: "Мне жаль", uz: "Uzr" },
+  { key: "english", en: "Do you speak English?", ru: "Вы говорите по-английски?", uz: "Inglizcha gapirasizmi?" },
+  { key: "understand", en: "I don’t understand", ru: "Я не понимаю", uz: "Tushunmadim" },
+  { key: "help", en: "Can you help me?", ru: "Вы можете мне помочь?", uz: "Yordam bera olasizmi?" },
+  { key: "toilet", en: "Where is the toilet?", ru: "Где туалет?", uz: "Hojatxona qayerda?" },
+  { key: "howMuch", en: "How much is it?", ru: "Сколько это стоит?", uz: "Bu qancha turadi?" },
+  { key: "expensive", en: "That’s too expensive", ru: "Это слишком дорого", uz: "Bu juda qimmat" },
+  { key: "discount", en: "Can you offer a lower price?", ru: "Можно дешевле?", uz: "Arzonroq qilasizmi?" },
+  { key: "water", en: "A bottle of water, please", ru: "Бутылку воды, пожалуйста", uz: "Bir shisha suv, iltimos" },
+  { key: "vegetarian", en: "Do you have vegetarian food?", ru: "У вас есть вегетарианская еда?", uz: "Vegetarian taomingiz bormi?" },
+  { key: "halal", en: "Is this halal?", ru: "Это халяль?", uz: "Bu halolmi?" },
+  { key: "noPork", en: "No pork, please", ru: "Без свинины, пожалуйста", uz: "Cho‘chqa go‘shtisiz, iltimos" },
+  { key: "bill", en: "The bill, please", ru: "Счёт, пожалуйста", uz: "Hisobni bering, iltimos" },
+  { key: "card", en: "Can I pay by card?", ru: "Можно оплатить картой?", uz: "Karta bilan to‘lasam bo‘ladimi?" },
+  { key: "cash", en: "Do you accept cash?", ru: "Вы принимаете наличные?", uz: "Naqd pul qabul qilasizmi?" },
+  { key: "station", en: "Where is the train station?", ru: "Где железнодорожный вокзал?", uz: "Temiryo‘l vokzali qayerda?" },
+  { key: "airport", en: "Please take me to the airport", ru: "Отвезите меня в аэропорт, пожалуйста", uz: "Iltimos, meni aeroportga olib boring" },
+  { key: "hotel", en: "Please take me to this hotel", ru: "Отвезите меня в эту гостиницу, пожалуйста", uz: "Iltimos, meni shu mehmonxonaga olib boring" },
+  { key: "stop", en: "Please stop here", ru: "Остановите здесь, пожалуйста", uz: "Iltimos, shu yerda to‘xtating" },
+  { key: "left", en: "Turn left", ru: "Поверните налево", uz: "Chapga buriling" },
+  { key: "right", en: "Turn right", ru: "Поверните направо", uz: "O‘ngga buriling" },
+  { key: "straight", en: "Go straight ahead", ru: "Идите прямо", uz: "To‘g‘riga boring" },
+  { key: "time", en: "How long will it take?", ru: "Сколько времени это займёт?", uz: "Qancha vaqt ketadi?" },
+  { key: "ticket", en: "One ticket to Samarkand, please", ru: "Один билет до Самарканда, пожалуйста", uz: "Samarqandga bitta chipta, iltimos" },
+  { key: "platform", en: "Which platform is it?", ru: "С какой платформы?", uz: "Qaysi platformadan?" },
+  { key: "trainTime", en: "When does the train leave?", ru: "Когда отправляется поезд?", uz: "Poyezd qachon jo‘naydi?" },
+  { key: "pharmacy", en: "Where is the nearest pharmacy?", ru: "Где ближайшая аптека?", uz: "Eng yaqin dorixona qayerda?" },
+  { key: "doctor", en: "I need a doctor", ru: "Мне нужен врач", uz: "Menga shifokor kerak" },
+  { key: "police", en: "Please call the police", ru: "Вызовите полицию, пожалуйста", uz: "Iltimos, politsiyani chaqiring" },
+  { key: "passport", en: "I have lost my passport", ru: "Я потерял(а) паспорт", uz: "Pasportimni yo‘qotib qo‘ydim" },
+  { key: "embassy", en: "Where is my embassy?", ru: "Где находится моё посольство?", uz: "Elchixonam qayerda?" },
+  { key: "emergency", en: "I need urgent help", ru: "Мне срочно нужна помощь", uz: "Menga zudlik bilan yordam kerak" },
+  { key: "wifi", en: "What is the Wi-Fi password?", ru: "Какой пароль от Wi-Fi?", uz: "Wi-Fi paroli nima?" },
+  { key: "goodbye", en: "Goodbye", ru: "До свидания", uz: "Xayr" },
+];
+
+export const currencyRates = [
+  { code: "UZS", label: "Uzbekistani som", perUzs: 1 },
+  { code: "USD", label: "US dollar", perUzs: 1 / 12_500 },
+  { code: "EUR", label: "Euro", perUzs: 1 / 13_700 },
+  { code: "RUB", label: "Russian ruble", perUzs: 1 / 145 },
+] as const;
+
+export const currencyRateUpdated = "17 Nov 2026 · sample static rates";
