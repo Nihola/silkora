@@ -194,7 +194,7 @@ with featured(target_type, target_no) as (
          case when f.target_type='place'
               then ('20000000-0000-4000-8000-' || lpad(f.target_no::text,12,'0'))::uuid
               else ('30000000-0000-4000-8000-' || lpad(f.target_no::text,12,'0'))::uuid end as target_id,
-         ('10000000-0000-4000-8000-' || lpad(9 + r.review_no::text::integer,12,'0'))::uuid as user_id,
+         ('10000000-0000-4000-8000-' || lpad((9 + r.review_no)::text,12,'0'))::uuid as user_id,
          (case r.review_no when 1 then 5 when 2 then 4 else 5 end)::smallint as rating,
          case r.review_no when 1 then 'Demo review: clear information and a memorable stop.'
                           when 2 then 'Demo review: a useful sample listing for planning.'

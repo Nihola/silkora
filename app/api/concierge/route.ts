@@ -3,6 +3,7 @@ import { generateText, stepCountIs } from "ai";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { allow, clientIp } from "@/lib/rate-limit";
 import { buildConciergeTools, confirmSos } from "@/lib/concierge-tools";
 import { nearbyPlaces } from "@/data/nearby-places";
 import { travelPackages } from "@/data/packages";
@@ -10,18 +11,7 @@ import { travelPackages } from "@/data/packages";
 export const runtime = "nodejs";
 const messageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().trim().min(1).max(2000) });
 const requestSchema = z.object({ userId: z.string().uuid(), locale: z.enum(["en", "ru", "uz"]).default("en"), city: z.string().trim().min(2).max(40).default("Tashkent"), messages: z.array(messageSchema).max(16).optional(), confirmSosToken: z.string().min(20).max(2000).optional() });
-const buckets = new Map<string, { count: number; resetAt: number }>();
 const LIMIT = 10;
-const WINDOW_MS = 60_000;
-
-function allowRequest(key: string) {
-  const now = Date.now();
-  const current = buckets.get(key);
-  if (!current || current.resetAt <= now) { buckets.set(key, { count: 1, resetAt: now + WINDOW_MS }); return true; }
-  if (current.count >= LIMIT) return false;
-  current.count += 1;
-  return true;
-}
 
 const text: Record<string, { fallback: string; limit: string; sos: string; sosDenied: string; sosPrompt: string; places: string; packages: string; weather: string; safety: string; price: string; hosts: string; booking: string }> = {
   en: { fallback: "I’m running in demo mode and can use Silkora’s seeded travel guides and listings. Tell me a city and what you need, or try one of the suggestions below.", limit: "You’ve sent several messages quickly. Please wait a minute and try again.", sos: "Demo SOS recorded on this server. No emergency services or contacts were notified.", sosDenied: "That SOS confirmation expired or could not be verified. Please ask for a new confirmation.", sosPrompt: "Review the SOS details and confirm in the dialog if you want to record a demo SOS. No one will be contacted.", places: "Here are matching place listings. Details may be sample data, so confirm important information locally.", packages: "These seeded package ideas can help you plan. Availability and prices need confirmation.", weather: "Here is the current forecast or a clearly labeled sample forecast.", safety: "These are general demo safety reminders, not verified allegations about named people or businesses.", price: "Here is an indicative local range. Actual prices can vary; confirm before buying.", hosts: "Host matching is planned but not available yet.", booking: "To create a pending demo booking request, include the package or place, start and end dates, guest count, and a message. You can also use Request booking on a package page." },
@@ -86,8 +76,7 @@ export async function POST(request: Request) {
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid chat request." }, { status: 400 });
   const { userId, locale, city, messages, confirmSosToken } = parsed.data;
-  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (!allowRequest(`${userId}:${forwardedFor}`)) return NextResponse.json({ error: text[locale].limit }, { status: 429 });
+  if (!allow(`concierge:${userId}:${clientIp(request)}`, LIMIT) || !allow(`concierge-ip:${clientIp(request)}`, LIMIT * 3)) return NextResponse.json({ error: text[locale].limit }, { status: 429 });
 
   if (confirmSosToken) {
     const event = confirmSos(confirmSosToken, userId);
@@ -103,7 +92,7 @@ export async function POST(request: Request) {
     const openai = createOpenAI({ apiKey: process.env.LLM_API_KEY, baseURL: process.env.LLM_BASE_URL || undefined });
     const tools = buildConciergeTools(userId);
     const result = await generateText({
-      model: openai(process.env.LLM_MODEL || "gpt-4o-mini"),
+      model: openai.chat(process.env.LLM_MODEL || "gpt-4o-mini"),
       system: `You are Silkora, a practical travel assistant for Uzbekistan. Reply in the user's language (${locale}: ${locale === "uz" ? "Uzbek" : locale === "ru" ? "Russian" : "English"}). Ground factual claims in results from search_places, search_packages, get_fair_price, get_scam_alerts, and get_weather before recommending specifics. Be honest when data is missing, stale, or illustrative. Never claim sample content is verified. Do not provide medical or legal certainty; give general information and direct people to qualified local professionals or official authorities. Ask for missing dates, guest count, or message before a booking request. Booking requests are pending demos and no provider or payment is contacted. For trigger_sos, the tool only prepares a confirmation; clearly ask the user to explicitly press the SOS confirmation button in the UI, and never claim that anyone was contacted. Host matching is not yet available. Current selected city is ${city}.`,
       messages: messages.map(({ role, content }) => ({ role, content })),
       tools,

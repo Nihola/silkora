@@ -5,6 +5,7 @@ const demoShares = new Map<string, SharePoint>();
 type DemoContact = { userId: string; name: string; phone: string; relationship: string; linkToken: string; chatId?: string };
 const demoContacts = new Map<string, DemoContact>();
 
+export function resetDemoState() { demoShares.clear(); demoContacts.clear(); }
 export function addDemoContact(contact: DemoContact) { demoContacts.set(contact.linkToken, contact); }
 export function linkDemoContact(linkToken: string, chatId: string) {
   const contact = demoContacts.get(linkToken);

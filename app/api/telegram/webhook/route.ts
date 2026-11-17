@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const update = await request.json().catch(() => null) as TelegramUpdate | null;
   const [command, token] = update?.message?.text?.trim().split(/\s+/, 2) ?? [];
   const chatId = update?.message?.chat?.id;
-  if (command !== "/start" || !token || !chatId) return NextResponse.json({ ok: true });
+  if (command !== "/start" || !token || !/^[a-f0-9]{32}$/i.test(token) || !chatId) return NextResponse.json({ ok: true });
   const rows = await rest(`emergency_contacts?link_token=eq.${encodeURIComponent(token)}&select=id`, { method: "PATCH", body: JSON.stringify({ telegram_chat_id: String(chatId), linked_at: new Date().toISOString(), link_token: null }) });
   const linked = Array.isArray(rows) && rows.length > 0 ? true : linkDemoContact(token, String(chatId));
   return NextResponse.json({ ok: true, linked });

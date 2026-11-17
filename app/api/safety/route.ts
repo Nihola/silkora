@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { allow, clientIp } from "@/lib/rate-limit";
 import { nearestSafetyPlaces } from "@/data/safety-seed";
 import { addDemoContact, createLiveShare, ensureSafetyProfile, getDemoContacts, rest, sendTelegram, stopLiveShare, updateLiveShare } from "@/lib/safety-server";
 
@@ -17,9 +18,13 @@ const schema = z.discriminatedUnion("action", [
 ]);
 
 export async function POST(request: Request) {
+  const ip = clientIp(request);
+  if (!allow(`safety:${ip}`, 30)) return NextResponse.json({ error: "Too many requests. Please wait a minute and try again." }, { status: 429, headers: { "Retry-After": "60" } });
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Please check the safety form and try again." }, { status: 400 });
   const body = parsed.data;
+  // Location pings are frequent and cheap; heavier actions (SOS share, contacts, reports) get a tighter cap.
+  if (body.action !== "update-share" && !allow(`safety-write:${body.userId}:${ip}`, 10)) return NextResponse.json({ error: "Too many requests. Please wait a minute and try again." }, { status: 429, headers: { "Retry-After": "60" } });
   try {
     if (body.action === "start-share") {
       const share = await createLiveShare(body);
@@ -45,7 +50,7 @@ export async function POST(request: Request) {
       const linkToken = randomUUID().replaceAll("-", "");
       const rows = await rest("emergency_contacts", { method: "POST", body: JSON.stringify({ user_id: body.userId, name: body.name, phone: body.phone, relationship: body.relationship, phone_verification: "TODO_VERIFY", notification_consent: true, link_token: linkToken, is_demo: true }) });
       if (!Array.isArray(rows) || !rows.length) addDemoContact({ userId: body.userId, name: body.name, phone: body.phone, relationship: body.relationship, linkToken });
-      const botName = process.env.TELEGRAM_BOT_USERNAME;
+      const botName = process.env.TELEGRAM_BOT_USERNAME?.replace(/^@/, "");
       return NextResponse.json({ contact: Array.isArray(rows) ? rows[0] : null, telegramUrl: botName ? `https://t.me/${botName}?start=${linkToken}` : null, demo: !Array.isArray(rows) || !rows.length });
     }
     if (body.action === "checkin") {
@@ -66,7 +71,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const city = new URL(request.url).searchParams.get("city") ?? "Tashkent";
+  const city = z.string().trim().min(2).max(40).regex(/^[p{L}p{N} .'-]+$/u).catch("Tashkent").parse(new URL(request.url).searchParams.get("city") ?? "Tashkent");
   const rows = await rest(`scam_alerts?select=city,title,description,category,verified,is_demo,reported_at&city=eq.${encodeURIComponent(city)}&or=(verified.eq.true,is_demo.eq.true)&order=reported_at.desc&limit=8`);
   return NextResponse.json({ alerts: Array.isArray(rows) && rows.length ? rows : null });
 }

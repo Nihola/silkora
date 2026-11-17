@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getDemoContacts, rest, sendTelegram } from "@/lib/safety-server";
 
@@ -5,7 +6,9 @@ export const runtime = "nodejs";
 type DueCheckin = { id: string; user_id: string; label: string; due_at: string };
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const given = Buffer.from(request.headers.get("authorization") ?? "");
+  const wanted = Buffer.from(`Bearer ${secret ?? ""}`);
+  if (!secret || given.length !== wanted.length || !timingSafeEqual(given, wanted)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const due = await rest(`checkins?select=id,user_id,label,due_at&due_at=lte.${encodeURIComponent(new Date().toISOString())}&checked_in_at=is.null&alerted_at=is.null&limit=100`);
   if (!Array.isArray(due) || !due.length) return NextResponse.json({ processed: 0, notified: 0 });
   let notified = 0;

@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push": "node scripts/db.mjs push",
+    "db:seed": "node scripts/db.mjs seed",
+    "env:check": "node scripts/check-env.mjs",
+    "prebuild": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.118",
